@@ -1,6 +1,0 @@
-Say It Right: Help people say hard things in the right way
-You need to message a professor, a recruiter, or a friend you let down. You know what you mean, but not how to say it, and one wrong tone changes the whole message.
-Your mission: build a tool that helps people communicate what they mean, to someone specific, in a situation that matters.
-Start here: a rough message goes in, and a better one comes out
-Make it yours: Who is your user and what moment is stressful for them? How can your app teach them something, not just rewrite for them? What does "the right tone" really mean?
-Tip: pick a niche. "Text rewriter" is common, but "first-year students emailing professors" is yours.

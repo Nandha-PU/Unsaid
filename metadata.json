@@ -1,0 +1,8 @@
+{
+  "name": "unsaid",
+  "description": "Universal, auditable, privacy-first AI communication coach for high-stakes messages to anyone.",
+  "permissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
