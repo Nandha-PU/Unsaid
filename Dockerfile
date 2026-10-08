@@ -1,32 +1,29 @@
-FROM node:22-slim
+FROM python:3.12-slim
 
-ENV NODE_ENV=production \
-    PORT=3000
+# Prevent Python from writing .pyc and buffer stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
 
-WORKDIR /app
+WORKDIR /srv
 
-# Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev || npm install --omit=dev
+# Install dependencies first for Docker layer caching
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files, prompts, and rubrics
-COPY server.ts tsconfig.json ./
+# Copy application code, prompts, rubrics, and static files
 COPY app ./app
 COPY prompts ./prompts
 COPY rubrics ./rubrics
 
-# Build TypeScript server
-RUN npm install -D typescript @types/node @types/express @types/cors tsx && \
-    npm run build && \
-    npm prune --omit=dev
-
-# Run as non-root user for security
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser:appuser /app
+# Security: run as non-root user
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser:appuser /srv
 USER appuser
 
-EXPOSE 3000
+EXPOSE 8000
 
+# Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD node -e "fetch('http://localhost:3000/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-CMD ["node", "dist/server.js"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]

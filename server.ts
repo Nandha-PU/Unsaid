@@ -6,28 +6,29 @@ import crypto from 'crypto';
 import yaml from 'yaml';
 import { GoogleGenAI } from '@google/genai';
 
-// -----------------------------------------------------------------------------
-// CONFIGURATION & INITIALIZATION
-// -----------------------------------------------------------------------------
+// Determine environment
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '0.0.0.0';
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
-const ALLOWED_MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash', 'fake'];
 
-let currentGlobalModel = DEFAULT_MODEL;
-
+// API Key handling
 const apiKey = process.env.GEMINI_API_KEY || process.env.LLM_API_KEY || '';
+
+// Initialize Google GenAI client if key is available
 const ai = apiKey
   ? new GoogleGenAI({
       apiKey,
-      httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
     })
   : null;
 
 const app = express();
 
-// Security and CORS headers
-app.use((_req, res, next) => {
+// Security and CORS middleware
+app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -38,9 +39,7 @@ app.use((_req, res, next) => {
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
-// -----------------------------------------------------------------------------
-// RATE LIMITING (SLIDING WINDOW WITH AUTOMATIC CLEANUP)
-// -----------------------------------------------------------------------------
+// Sliding window in-memory rate limiter
 const ipRequests = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = parseInt(process.env.RATE_LIMIT_PER_MIN || '60', 10);
@@ -68,9 +67,7 @@ function checkRateLimit(req: Request, res: Response, next: () => void) {
   next();
 }
 
-// -----------------------------------------------------------------------------
-// SAFETY FILTER (REFUSALS & CRISIS SUPPORT)
-// -----------------------------------------------------------------------------
+// Safety Evaluation Logic
 const THREAT_PATTERN = /\b(kill\s+you|bomb|destroy\s+your\s+life|harm\s+you|blackmail|leak\s+your\s+address|hunt\s+you\s+down|ruin\s+you)\b/i;
 const CRISIS_PATTERN = /\b(suicide|end\s+my\s+life|kill\s+myself|hurting?\s+myself|self[\s-]harm)\b/i;
 
@@ -92,17 +89,10 @@ function evaluateSafety(text: string): { status: 'ok' | 'refused' | 'crisis'; me
   return { status: 'ok' };
 }
 
-// -----------------------------------------------------------------------------
-// RUBRIC & PROMPTS CACHING
-// -----------------------------------------------------------------------------
-function readPromptFile(filename: string): string {
-  const p = path.resolve('prompts', filename);
-  return fs.existsSync(p) ? fs.readFileSync(p, 'utf-8') : '';
-}
-
+// Load Rubric and Prompts
+const rubricPath = path.resolve('rubrics', 'professor_ask.v1.yaml');
 let rubricData: any = {};
 try {
-  const rubricPath = path.resolve('rubrics', 'professor_ask.v1.yaml');
   if (fs.existsSync(rubricPath)) {
     rubricData = yaml.parse(fs.readFileSync(rubricPath, 'utf-8'));
   }
@@ -110,38 +100,50 @@ try {
   console.warn('Could not parse rubric YAML:', e);
 }
 
-const diagnosePromptTmpl = readPromptFile('diagnose.v1.md');
-const rewritePromptTmpl = readPromptFile('rewrite.v1.md');
+const diagnosePromptPath = path.resolve('prompts', 'diagnose.v1.md');
+const rewritePromptPath = path.resolve('prompts', 'rewrite.v1.md');
+const diagnosePromptTmpl = fs.existsSync(diagnosePromptPath)
+  ? fs.readFileSync(diagnosePromptPath, 'utf-8')
+  : '';
+const rewritePromptTmpl = fs.existsSync(rewritePromptPath)
+  ? fs.readFileSync(rewritePromptPath, 'utf-8')
+  : '';
 
-// -----------------------------------------------------------------------------
-// ZERO-RETENTION AUDIT LOGGING & HELPERS
-// -----------------------------------------------------------------------------
+// Privacy-First Audit Logger (Zero Raw Draft Retention)
 function logAudit(record: Record<string, any>) {
-  process.stdout.write(JSON.stringify({ timestamp: new Date().toISOString(), ...record }) + '\n');
+  const line = {
+    timestamp: new Date().toISOString(),
+    ...record,
+  };
+  process.stdout.write(JSON.stringify(line) + '\n');
 }
 
 function hashText(text: string): string {
   return crypto.createHash('sha256').update(text, 'utf-8').digest('hex');
 }
 
+// Clean JSON response from LLM
 function cleanJsonText(raw: string): string {
   let clean = raw.trim();
   const fenceMatch = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (fenceMatch) clean = fenceMatch[1].trim();
+  if (fenceMatch) {
+    clean = fenceMatch[1].trim();
+  }
   const start = clean.indexOf('{');
   const end = clean.lastIndexOf('}');
-  return start !== -1 && end !== -1 && end >= start ? clean.slice(start, end + 1) : clean;
+  if (start !== -1 && end !== -1 && end >= start) {
+    clean = clean.slice(start, end + 1);
+  }
+  return clean;
 }
 
-// -----------------------------------------------------------------------------
-// RESILIENT OFFLINE MOCKS (SEAMLESS LOCAL TESTING & GRACEFUL DEGRADATION)
-// -----------------------------------------------------------------------------
+// Offline Mock LLM Fallbacks
 function generateMockDiagnose(draft: string) {
-  const flags: any[] = [];
+  const flagList = [];
   const lower = draft.toLowerCase();
 
   if (lower.includes('unfair')) {
-    flags.push({
+    flagList.push({
       text: 'unfair',
       reason: 'Blaming the timeline or expectations reads as defensive and deflects personal responsibility.',
       principle: 'Own it',
@@ -149,10 +151,9 @@ function generateMockDiagnose(draft: string) {
       dimension_id: 'accountability',
     });
   }
-
   if (lower.includes('hey prof') || lower.includes('hey ') || lower.startsWith('hey')) {
     const phrase = lower.includes('hey prof') ? 'hey prof' : 'hey';
-    flags.push({
+    flagList.push({
       text: phrase,
       reason: 'Overly casual greeting can be perceived as lacking respect for the recipient.',
       principle: 'Respectful address',
@@ -161,9 +162,9 @@ function generateMockDiagnose(draft: string) {
     });
   }
 
-  if (flags.length === 0) {
+  if (flagList.length === 0) {
     const firstWords = draft.split('\n')[0].slice(0, 30).trim() || 'my situation';
-    flags.push({
+    flagList.push({
       text: firstWords,
       reason: 'Could state your specific proposed next steps more directly upfront.',
       principle: 'Lead with the ask',
@@ -181,7 +182,7 @@ function generateMockDiagnose(draft: string) {
       formality: { value: 2, target_min: 3, target_max: 4 },
       proportion: { value: 3, target_min: 3, target_max: 4 },
     },
-    flags,
+    flags: flagList,
   };
 }
 
@@ -208,38 +209,116 @@ function generateMockRewrite(recipient: string, situation: string) {
 }
 
 // -----------------------------------------------------------------------------
-// CORE ROUTES
+// ROUTES
 // -----------------------------------------------------------------------------
-app.get('/health', (_req, res) => {
+
+app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     provider: ai ? 'gemini' : 'fake',
-    model: currentGlobalModel,
+    model: 'gemini-3.1-flash-lite',
     environment: process.env.ENVIRONMENT || 'production',
   });
 });
 
-app.get('/models', (_req, res) => {
+app.get('/models', (req, res) => {
   res.json({
-    models: ALLOWED_MODELS,
-    active: currentGlobalModel,
-    provider: currentGlobalModel === 'fake' || !ai ? 'fake' : 'gemini',
+    models: ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash', 'fake'],
+    active: 'gemini-3.1-flash-lite',
+    provider: ai ? 'gemini' : 'fake',
   });
 });
 
 app.post('/model', (req, res) => {
   const chosen = (req.body?.model || '').trim();
-  if (ALLOWED_MODELS.includes(chosen)) {
-    currentGlobalModel = chosen;
-  }
   res.json({
     status: 'ok',
-    provider: currentGlobalModel === 'fake' || !ai ? 'fake' : 'gemini',
-    model: currentGlobalModel,
+    provider: chosen === 'fake' || !ai ? 'fake' : 'gemini',
+    model: chosen || 'gemini-3.1-flash-lite',
   });
 });
 
-app.get('/meta', (_req, res) => {
+app.post('/suggest-situations', async (req, res) => {
+  const recipient = (req.body?.recipient || '').trim();
+  if (!recipient) {
+    return res.json({ recipient: '', situations: [] });
+  }
+
+  const safety = evaluateSafety(recipient);
+  if (safety.status === 'refused') {
+    return res.json({
+      recipient: 'Colleague',
+      situations: [
+        'Clarifying Professional Expectations',
+        'Requesting Formal Meeting',
+        'Aligning on Project Scope',
+      ],
+    });
+  }
+
+  const modelOverride = req.body?.model;
+  const isMock = modelOverride === 'fake' || !ai;
+
+  if (isMock) {
+    return res.json({
+      recipient,
+      situations: [
+        `Clarifying expectations with ${recipient}`,
+        `Requesting urgent feedback from ${recipient}`,
+        'Addressing an unresolved dispute',
+        'Setting a firm personal boundary',
+        'Negotiating terms or timeline',
+        'Delivering unexpected news politely',
+      ],
+    });
+  }
+
+  try {
+    const prompt = `You are an expert communication coach. A user needs to write a delicate, high-stakes message to: '${recipient}'.
+Generate 5 to 6 realistic, specific, and common high-stakes communication situations someone faces when messaging this specific person.
+Each situation MUST be a concise phrase of 2 to 6 words (e.g., 'Addressing Micromanagement', 'Requesting Extension', 'Disputing Deposit Deduction', 'Setting Personal Boundaries').
+Return ONLY a valid JSON array of strings, for example:
+["Situation 1", "Situation 2", "Situation 3", "Situation 4", "Situation 5"]`;
+
+    const modelName = modelOverride && modelOverride.startsWith('gemini')
+      ? modelOverride
+      : 'gemini-3.1-flash-lite';
+
+    const resp = await ai!.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        systemInstruction: 'You are an expert communication coach. You MUST respond with ONLY a valid, parseable JSON array of strings.',
+        responseMimeType: 'application/json',
+        temperature: 0.3,
+      },
+    });
+
+    const parsed = JSON.parse(resp.text?.trim() || '[]');
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return res.json({
+        recipient,
+        situations: parsed.slice(0, 6).map((s: any) => String(s).trim()),
+      });
+    }
+  } catch (err) {
+    console.warn('Error generating dynamic situations via Gemini:', err);
+  }
+
+  return res.json({
+    recipient,
+    situations: [
+      'Setting a Firm Boundary',
+      'Delivering Unexpected News',
+      'Clarifying a Misunderstanding',
+      'Requesting Timeline Adjustment',
+      'Polite But Resolute Refusal',
+      'Addressing Unfair Expectations',
+    ],
+  });
+});
+
+app.get('/meta', (req, res) => {
   res.json({
     relationship: [
       { id: 'superior', label: 'Someone senior to me (Manager / Professor / Department Chair)' },
@@ -338,86 +417,12 @@ app.post('/context', (req, res) => {
   });
 });
 
-app.post('/suggest-situations', async (req, res) => {
-  const recipient = (req.body?.recipient || '').trim();
-  if (!recipient) return res.json({ recipient: '', situations: [] });
-
-  const safety = evaluateSafety(recipient);
-  if (safety.status === 'refused') {
-    return res.json({
-      recipient: 'Colleague',
-      situations: [
-        'Clarifying Professional Expectations',
-        'Requesting Formal Meeting',
-        'Aligning on Project Scope',
-      ],
-    });
-  }
-
-  const modelChoice = req.body?.model || currentGlobalModel;
-  const isMock = modelChoice === 'fake' || !ai;
-
-  if (isMock) {
-    return res.json({
-      recipient,
-      situations: [
-        `Clarifying expectations with ${recipient}`,
-        `Requesting urgent feedback from ${recipient}`,
-        'Addressing an unresolved dispute',
-        'Setting a firm personal boundary',
-        'Negotiating terms or timeline',
-        'Delivering unexpected news politely',
-      ],
-    });
-  }
-
-  try {
-    const prompt = `You are an expert communication coach. A user needs to write a delicate message to: '${recipient}'.
-Generate 5 to 6 realistic, specific, and common communication situations someone faces when messaging this specific person.
-Each situation MUST be a concise phrase of 2 to 6 words (e.g., 'Addressing Micromanagement', 'Requesting Extension', 'Disputing Deposit Deduction').
-Return ONLY a valid JSON array of strings: ["Situation 1", "Situation 2", "Situation 3", "Situation 4", "Situation 5"]`;
-
-    const modelName = modelChoice.startsWith('gemini') ? modelChoice : DEFAULT_MODEL;
-    const resp = await ai!.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        systemInstruction: 'You are an expert communication coach. Respond with ONLY a parseable JSON array of strings.',
-        responseMimeType: 'application/json',
-        temperature: 0.3,
-      },
-    });
-
-    const parsed = JSON.parse(resp.text?.trim() || '[]');
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return res.json({
-        recipient,
-        situations: parsed.slice(0, 6).map(s => String(s).trim()),
-      });
-    }
-  } catch (err) {
-    console.warn('Error generating dynamic situations via Gemini:', err);
-  }
-
-  return res.json({
-    recipient,
-    situations: [
-      'Setting a Firm Boundary',
-      'Delivering Unexpected News',
-      'Clarifying a Misunderstanding',
-      'Requesting Timeline Adjustment',
-      'Polite But Resolute Refusal',
-      'Addressing Unfair Expectations',
-    ],
-  });
-});
-
 app.post('/diagnose', checkRateLimit, async (req, res) => {
   const start = performance.now();
   const draft = (req.body?.draft || '').trim();
   const recipient = (req.body?.recipient || 'Manager').trim();
   const situation = (req.body?.situation || 'General request').trim();
-  const modelChoice = req.body?.model || currentGlobalModel;
+  const modelOverride = req.body?.model;
 
   if (draft.length < 15) {
     return res.status(422).json({
@@ -426,17 +431,26 @@ app.post('/diagnose', checkRateLimit, async (req, res) => {
   }
 
   const safety = evaluateSafety(draft);
-  if (safety.status === 'refused') return res.status(400).json({ error: { code: 'refused', message: safety.message } });
-  if (safety.status === 'crisis') return res.status(400).json({ error: { code: 'crisis_support', message: safety.message } });
+  if (safety.status === 'refused') {
+    return res.status(400).json({
+      error: { code: 'refused', message: safety.message },
+    });
+  }
+  if (safety.status === 'crisis') {
+    return res.status(400).json({
+      error: { code: 'crisis_support', message: safety.message },
+    });
+  }
 
   const requestId = crypto.randomUUID().slice(0, 8);
-  const isMock = modelChoice === 'fake' || !ai;
+  const isMock = modelOverride === 'fake' || !ai;
   let parsedResult: any = null;
-  let usedModel = isMock ? 'fake' : modelChoice;
+  let usedModel = isMock ? 'fake' : (modelOverride || 'gemini-3.1-flash-lite');
 
   if (isMock) {
     parsedResult = generateMockDiagnose(draft);
   } else {
+    // Build Prompt
     const situationsDict = rubricData.situations || {};
     const sitKey = situation.toLowerCase();
     const sitInfo = situationsDict[situation] || situationsDict[sitKey] || { name: situation, description: situation };
@@ -459,7 +473,7 @@ app.post('/diagnose', checkRateLimit, async (req, res) => {
         model: usedModel,
         contents: userPrompt,
         config: {
-          systemInstruction: 'You are an expert communication coach. Respond with ONLY a valid JSON object matching the requested schema.',
+          systemInstruction: 'You are an expert academic and professional communication coach. You MUST respond with ONLY a valid, parseable JSON object matching the requested schema.',
           responseMimeType: 'application/json',
           temperature: 0.2,
         },
@@ -478,13 +492,14 @@ app.post('/diagnose', checkRateLimit, async (req, res) => {
     }
   }
 
+  // Parse Scores and Dimensions deterministically
+  const rawScores = parsedResult?.scores || {};
   function parseScore(val: any, targetMin = 4, targetMax = 5) {
     const rawVal = typeof val === 'object' && val !== null ? val.value ?? val.score ?? 3 : (typeof val === 'number' ? val : 3);
     const num = Math.max(1, Math.min(5, Math.round(Number(rawVal) || 3)));
     return { value: num, target_min: targetMin, target_max: targetMax };
   }
 
-  const rawScores = parsedResult?.scores || {};
   const scores = {
     clarity: parseScore(rawScores.clarity, 4, 5),
     accountability: parseScore(rawScores.accountability, 4, 5),
@@ -535,6 +550,7 @@ app.post('/diagnose', checkRateLimit, async (req, res) => {
     ? Math.round(100 * (closenesses.reduce((a, b) => a + b, 0) / closenesses.length))
     : 50;
 
+  // Process Flags
   const rawFlags = Array.isArray(parsedResult?.flags) ? parsedResult.flags : [];
   const validFlags = rawFlags
     .filter((f: any) => typeof f === 'object' && f !== null && f.text)
@@ -588,7 +604,7 @@ app.post('/rewrite', checkRateLimit, async (req, res) => {
   const draft = (req.body?.draft || '').trim();
   const recipient = (req.body?.recipient || 'Manager').trim();
   const situation = (req.body?.situation || 'General request').trim();
-  const modelChoice = req.body?.model || currentGlobalModel;
+  const modelOverride = req.body?.model;
 
   if (draft.length < 15) {
     return res.status(422).json({
@@ -597,13 +613,17 @@ app.post('/rewrite', checkRateLimit, async (req, res) => {
   }
 
   const safety = evaluateSafety(draft);
-  if (safety.status === 'refused') return res.status(400).json({ error: { code: 'refused', message: safety.message } });
-  if (safety.status === 'crisis') return res.status(400).json({ error: { code: 'crisis_support', message: safety.message } });
+  if (safety.status === 'refused') {
+    return res.status(400).json({ error: { code: 'refused', message: safety.message } });
+  }
+  if (safety.status === 'crisis') {
+    return res.status(400).json({ error: { code: 'crisis_support', message: safety.message } });
+  }
 
   const requestId = crypto.randomUUID().slice(0, 8);
-  const isMock = modelChoice === 'fake' || !ai;
+  const isMock = modelOverride === 'fake' || !ai;
   let parsedResult: any = null;
-  let usedModel = isMock ? 'fake' : modelChoice;
+  let usedModel = isMock ? 'fake' : (modelOverride || 'gemini-3.1-flash-lite');
 
   if (isMock) {
     parsedResult = generateMockRewrite(recipient, situation);
@@ -626,7 +646,7 @@ app.post('/rewrite', checkRateLimit, async (req, res) => {
         model: usedModel,
         contents: userPrompt,
         config: {
-          systemInstruction: 'You are an expert communication coach. Respond with ONLY a valid JSON object matching the requested schema.',
+          systemInstruction: 'You are an expert academic and professional writing coach. You MUST respond with ONLY a valid, parseable JSON object matching the requested schema.',
           responseMimeType: 'application/json',
           temperature: 0.2,
         },
@@ -682,19 +702,16 @@ app.post('/rewrite', checkRateLimit, async (req, res) => {
   });
 });
 
-// -----------------------------------------------------------------------------
-// FRONTEND STATIC SERVING
-// -----------------------------------------------------------------------------
+// Serve frontend static files from app/static
 const staticDir = path.resolve('app', 'static');
 app.use(express.static(staticDir));
 
-app.get('*', (_req, res) => {
+// Fallback to index.html for single page app
+app.get('*', (req, res) => {
   res.sendFile(path.join(staticDir, 'index.html'));
 });
 
-// -----------------------------------------------------------------------------
-// SERVER BOOTSTRAP
-// -----------------------------------------------------------------------------
+// Start listening
 app.listen(PORT, HOST, () => {
   console.log(`Unsaid / Say It Right server running on http://${HOST}:${PORT}`);
 });

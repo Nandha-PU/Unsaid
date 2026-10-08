@@ -1,9 +1,10 @@
 # 💬 Unsaid — Say It Right · Universal Communication Coach
 
-[![Node.js 22](https://img.shields.io/badge/node.js-22+-green.svg)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/typescript-5.7+-blue.svg)](https://www.typescriptlang.org/)
-[![Express](https://img.shields.io/badge/backend-Express_4.21+-000000.svg)](https://expressjs.com/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/backend-FastAPI_0.115+-009688.svg)](https://fastapi.tiangolo.com)
+[![Pydantic v2](https://img.shields.io/badge/validation-Pydantic_v2-e92063.svg)](https://docs.pydantic.dev/)
 [![Google Gemini](https://img.shields.io/badge/AI-Google_Gemini-4285F4.svg)](https://ai.google.dev/)
+[![Ollama Supported](https://img.shields.io/badge/local_LLM-Ollama_Ready-black.svg)](https://ollama.com/)
 [![Privacy](https://img.shields.io/badge/privacy-Zero_Retention-success.svg)](#-zero-retention-privacy--safety)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -471,23 +472,33 @@ gcloud run deploy unsaid \
 ```
 Unsaid/
 ├── app/
+│   ├── main.py              # FastAPI application, route handlers, security headers, rate limiting
+│   ├── pipeline.py          # Diagnostic scoring, rewrite logic, retry & recovery
+│   ├── safety.py            # Centralized threat & crisis wellbeing safeguards
+│   ├── llm.py               # Pluggable LLMClient protocols (Google Gemini, FakeLLM, etc.)
+│   ├── schemas.py           # Strict Pydantic v2 data models & validators
+│   ├── audit.py             # SHA-256 privacy audit logging to stdout
+│   ├── config.py            # Pydantic BaseSettings environment configuration
 │   └── static/              # Neobrutalist web interface
 │       ├── index.html       # Single-page UI shell
 │       ├── styles.css       # Neobrutalist design system & dark/light theme
 │       └── app.js           # Interactive application controller
 ├── prompts/
-│   ├── diagnose.v1.md       # Versioned diagnostic evaluation prompt
+│   ├── diagnose.v1.md       # Versioned diagnostic evaluation prompt (with prompt isolation)
 │   └── rewrite.v1.md        # Versioned coached rewrite & honesty guard prompt
 ├── rubrics/
 │   └── professor_ask.v1.yaml# 5-Dimension rubric specifications and target thresholds
 ├── evals/
-│   └── golden.json          # Curated benchmark dataset of emails & tests
+│   ├── golden.json          # Curated benchmark dataset of student emails
+│   └── run_evals.py         # Automated regression harness
+├── tests/
+│   ├── test_api.py          # Pytest suite for API endpoints, security, & privacy audit
+│   └── test_live_flow.py    # Live HTTP integration test
 ├── docs/
 │   └── decisions.md         # Architecture and design rationale records (ADRs)
-├── server.ts                # TypeScript server, API endpoints, rate limiter & AI coaching
-├── package.json             # Node.js dependencies and run scripts
-├── tsconfig.json            # TypeScript compiler configuration
-├── Dockerfile               # Minimal, hardened, non-root container image (Node.js 22)
+├── Dockerfile               # Minimal, hardened, non-root container image
+├── pyproject.toml           # Project dependencies and tool configurations
+├── requirements.txt         # Pinned runtime dependencies
 ├── .env.example             # Documented environment template
 ├── LICENSE                  # MIT License
 └── README.md                # Project documentation
