@@ -1,0 +1,86 @@
+version: "professor_ask.v1"
+recipient_types:
+  - "Manager / Supervisor"
+  - "Client / External Partner"
+  - "Professor / Academic Staff"
+  - "Colleague / Peer"
+  - "Landlord / Service Provider"
+
+situations:
+  general:
+    name: "General request or inquiry"
+    description: "Reaching out with a request, question, or follow-up."
+  extension:
+    name: "Requesting a deadline extension"
+    description: "Asking for extra time on a project, deliverable, or task."
+  query:
+    name: "Questioning or clarifying a decision"
+    description: "Asking for feedback, review, or clarification on a score, policy, or decision."
+  missed_deadline:
+    name: "Addressing a missed deliverable or delay"
+    description: "Reaching out regarding a delay, missed deadline, or scheduling conflict."
+  salary:
+    name: "Salary & Compensation Review"
+    description: "Initiating a professional compensation discussion or performance review."
+  workload:
+    name: "Pushing Back on Scope & Workload"
+    description: "Communicating boundary constraints on workload and scope constructively."
+  micromanagement:
+    name: "Addressing Micromanagement"
+    description: "Politely requesting autonomy and aligning on communication cadences."
+  remote:
+    name: "Requesting Remote Work / Flex Hours"
+    description: "Requesting flexible hours or remote arrangements with clear productivity commitments."
+  boundary:
+    name: "Setting a Firm Boundary"
+    description: "Respectfully stating a personal, working-hour, or scope boundary."
+  landlord:
+    name: "Disputing Deposit or Maintenance Issue"
+    description: "Addressing a lease, repair, or deposit issue with clear documentation and expectations."
+
+dimensions:
+  clarity:
+    name: "Clarity of ask"
+    description: "The specific request, question, or next step is stated early and clearly, not buried in paragraphs."
+    target_min: 4
+    target_max: 5
+    principles:
+      - "Lead with the ask"
+      - "Specify clear timelines or next steps"
+
+  accountability:
+    name: "Accountability"
+    description: "Takes ownership of circumstances without shifting blame, making defensive excuses, or deflecting."
+    target_min: 4
+    target_max: 5
+    principles:
+      - "Own it"
+      - "Focus on solutions rather than external blame"
+
+  warmth:
+    name: "Warmth and respect"
+    description: "Polite, considerate of the recipient's time and constraints, empathetic and courteous."
+    target_min: 3
+    target_max: 5
+    principles:
+      - "Acknowledge recipient's time"
+      - "Respectful tone"
+
+  formality:
+    name: "Formality fit"
+    description: "Strikes an appropriate professional tone. Avoids overly flippant greetings or archaic stiffness."
+    target_min: 3
+    target_max: 4
+    principles:
+      - "Respectful greeting"
+      - "Courteous sign-off"
+
+  proportion:
+    name: "Proportion"
+    description: "Message length matches the situation without over-apologizing, over-explaining, or rambling."
+    target_min: 3
+    target_max: 4
+    principles:
+      - "Brief and to the point"
+      - "Apologize once sincerely, don't grovel"
+

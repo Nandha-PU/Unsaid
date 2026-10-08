@@ -1,0 +1,66 @@
+[
+  {
+    "id": "draft_01_extension_panicked",
+    "situation": "extension",
+    "recipient": "Professor",
+    "draft": "Hey prof, I couldn't finish the lab on time because my laptop died and the deadline was unfair with three other midterms this week. Can I get extra time?",
+    "expected_low_dimensions": ["accountability", "formality"],
+    "expected_flag_substring": "unfair"
+  },
+  {
+    "id": "draft_02_extension_polite_vague",
+    "situation": "extension",
+    "recipient": "Professor",
+    "draft": "Dear Professor Davis, I hope your week is going well. I am having some difficulty completing the paper and would really appreciate if I could have more time.",
+    "expected_low_dimensions": ["clarity"],
+    "expected_flag_substring": "more time"
+  },
+  {
+    "id": "draft_03_extension_accountable_clear",
+    "situation": "extension",
+    "recipient": "Professor",
+    "draft": "Dear Professor Davis, I am writing to respectfully request a 48-hour extension on Assignment 2. I have completed the outline and can submit the final version by Friday at 5 PM.",
+    "expected_low_dimensions": [],
+    "expected_flag_substring": null
+  },
+  {
+    "id": "draft_04_grade_aggressive",
+    "situation": "grade",
+    "recipient": "Professor",
+    "draft": "Why did I get a C on Essay 1? I followed all the guidelines and spent 20 hours on it. The grading rubrics make no sense.",
+    "expected_low_dimensions": ["accountability", "warmth"],
+    "expected_flag_substring": "make no sense"
+  },
+  {
+    "id": "draft_05_grade_constructive",
+    "situation": "grade",
+    "recipient": "Professor",
+    "draft": "Dear Professor Martinez, thank you for grading Essay 1. Could I schedule 10 minutes during your office hours to review your feedback and understand where I can improve for Essay 2?",
+    "expected_low_dimensions": [],
+    "expected_flag_substring": null
+  },
+  {
+    "id": "draft_06_missed_ghosted",
+    "situation": "missed_deadline",
+    "recipient": "Professor",
+    "draft": "Sorry I didn't submit yesterday. I was sick. Can I still turn it in for full credit?",
+    "expected_low_dimensions": ["proportion", "accountability", "formality"],
+    "expected_flag_substring": "full credit"
+  },
+  {
+    "id": "draft_07_missed_accountable",
+    "situation": "missed_deadline",
+    "recipient": "Professor",
+    "draft": "Dear Professor Thompson, I apologize for missing yesterday's 11:59 PM deadline for Problem Set 3. I have attached my completed work now and understand if standard late penalties apply.",
+    "expected_low_dimensions": [],
+    "expected_flag_substring": null
+  },
+  {
+    "id": "draft_08_extension_overexplaining",
+    "situation": "extension",
+    "recipient": "Teaching Assistant (TA)",
+    "draft": "Hi TA, I am so sorry to bother you. My dog had to go to the vet on Tuesday, and then my roommate had a crisis, and my alarm didn't go off. I feel horrible. Can I please get an extension?",
+    "expected_low_dimensions": ["proportion"],
+    "expected_flag_substring": "horrible"
+  }
+]

@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Unsaid — Say It Right · Universal Communication Coach</title>
+  <meta name="description" content="Universal, auditable, privacy-first AI communication coach for high-stakes messages to anyone.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Default to light mode unless dark mode explicitly saved
+    try {
+      const saved = localStorage.getItem('unsaid_theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    } catch(e) {}
+  </script>
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<header>
+  <div class="brand-group">
+    <a href="#" class="brand-link brand-btn header-ctrl-btn" id="brandHome" title="Back to Homepage / Start Fresh">
+      <span class="brand">💬 unsaid.</span>
+      <span class="brand-sub">SAY IT RIGHT</span>
+    </a>
+  </div>
+
+  <!-- Uniform Height, Aligned Header Controls -->
+  <div class="header-controls">
+    <!-- Help / Guide Button -->
+    <button class="header-ctrl-btn guide-btn" id="btnOpenGuide" type="button" title="How It Works &amp; Guide">
+      <span>❓ Guide</span>
+    </button>
+
+    <!-- Glitch-Free Neobrutalist Model Dropdown -->
+    <div class="model-dropdown-wrap" id="modelDropdownWrap">
+      <button class="header-ctrl-btn model-dropdown-btn" id="btnModelToggle" type="button" aria-haspopup="listbox" aria-expanded="false" title="Choose AI Model">
+        <span class="model-icon">🤖</span>
+        <span class="model-lbl">MODEL:</span>
+        <span class="active-model-name" id="activeModelName">💨 Flash Lite</span>
+        <span class="model-caret">▾</span>
+      </button>
+      <div class="model-dropdown-menu" id="modelDropdownMenu" role="listbox">
+        <button type="button" class="model-menu-item active" data-val="gemini-3.1-flash-lite">
+          <span class="item-name">💨 Flash Lite</span>
+          <span class="item-check">✓</span>
+        </button>
+        <button type="button" class="model-menu-item" data-val="gemini-3.5-flash">
+          <span class="item-name">⚡ Gemini 3.5 Flash</span>
+          <span class="item-check"></span>
+        </button>
+        <button type="button" class="model-menu-item" data-val="gemini-3.6-flash">
+          <span class="item-name">🚀 Gemini 3.6 Flash</span>
+          <span class="item-check"></span>
+        </button>
+        <button type="button" class="model-menu-item" data-val="fake">
+          <span class="item-name">🛠️ Offline Mock</span>
+          <span class="item-check"></span>
+        </button>
+      </div>
+      <!-- Hidden native select for backwards compatibility -->
+      <select id="modelSelect" hidden>
+        <option value="gemini-3.1-flash-lite" selected>gemini-3.1-flash-lite</option>
+        <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+        <option value="gemini-3.6-flash">gemini-3.6-flash</option>
+        <option value="fake">fake</option>
+      </select>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="header-ctrl-btn theme-toggle-btn" id="themeToggle" type="button" aria-label="Toggle light or dark theme">
+      <span id="themeIcon">🌙</span> <span id="themeLabel">Dark</span>
+    </button>
+
+    <!-- Zero Retention Privacy Button (Clickable!) -->
+    <button class="header-ctrl-btn privacy-btn" id="btnPrivacy" type="button" title="Click to view our Zero-Retention Privacy Architecture">
+      <span>🔒 ZERO RETENTION</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- STEP 1: WRITE -->
+  <section class="step" data-step="1" aria-labelledby="title-1">
+    <p class="progress">✍️ STEP 1 OF 3 · WRITE</p>
+    <h1 id="title-1" tabindex="-1">Feel it. Write it.</h1>
+    <p class="intro">A safe space for things that are hard to say. Draft unfiltered — we coach tone before anyone sees it.</p>
+
+    <!-- Friendly User Cue: Chips or Custom Typing -->
+    <div class="context-cue-banner" role="note" aria-label="Usage hint">
+      <span class="cue-badge">💡 PRO-TIP</span>
+      <span class="cue-text">Click any chip for quick presets, <strong>or freely type your own custom recipient &amp; dilemma</strong> in the text boxes!</span>
+    </div>
+
+    <!-- Dynamic Context Inputs with Adaptive Situation Chips -->
+    <div class="context-grid">
+      <div class="context-field">
+        <label for="recipientInput">
+          <span>👤 WHO ARE YOU WRITING TO?</span>
+          <span class="field-cue">✏️ type custom or click chip</span>
+        </label>
+        <input type="text" id="recipientInput" placeholder="e.g. My manager, flight instructor, client, landlord..." value="My manager">
+        <div class="quick-chips" id="recipientChips" aria-label="Quick recipient options">
+          <button type="button" class="chip-btn active" data-val="My manager" data-category="manager">💼 Manager</button>
+          <button type="button" class="chip-btn" data-val="My project partner" data-category="colleague">🤝 Colleague</button>
+          <button type="button" class="chip-btn" data-val="A difficult client" data-category="client">👥 Client</button>
+          <button type="button" class="chip-btn" data-val="My landlord" data-category="landlord">🏠 Landlord</button>
+          <button type="button" class="chip-btn" data-val="My romantic partner" data-category="partner">❤️ Partner</button>
+          <button type="button" class="chip-btn" data-val="My professor" data-category="professor">🎓 Professor</button>
+        </div>
+      </div>
+
+      <div class="context-field">
+        <label for="situationInput">
+          <span>🎯 WHAT IS THE SITUATION?</span>
+          <span class="field-cue">✏️ type custom or click chip</span>
+        </label>
+        <input type="text" id="situationInput" placeholder="e.g. Asking for a raise, late deadline, boundary setting..." value="Salary &amp; Compensation Review">
+        <!-- Changes when a recipient chip is clicked -->
+        <div class="quick-chips" id="situationChips" aria-label="Situation options with emojis">
+          <button type="button" class="chip-btn active" data-val="Salary &amp; Compensation Review">💰 Salary &amp; Compensation Review</button>
+          <button type="button" class="chip-btn" data-val="Project Deadline Extension">⏳ Project Deadline Extension</button>
+          <button type="button" class="chip-btn" data-val="Pushing Back on Scope &amp; Workload">🛑 Pushing Back on Workload</button>
+          <button type="button" class="chip-btn" data-val="Addressing Micromanagement">👀 Addressing Micromanagement</button>
+          <button type="button" class="chip-btn" data-val="Requesting Remote Work / Flex Hours">🏠 Requesting Remote / Flex Hours</button>
+          <button type="button" class="chip-btn" data-val="Addressing Unfair Performance Review">⚖️ Unfair Performance Review</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Raw Draft Editor -->
+    <div class="editor">
+      <label for="draft-1">
+        <span>YOUR WORDS, UNFILTERED.</span>
+        <span id="charCount1" class="char-count">0 / 3000 (MIN 15)</span>
+      </label>
+      <textarea id="draft-1" placeholder="Start anywhere. Pour out what you're thinking, raw and honest..."></textarea>
+      <div class="reminder">✨ Messy is a good place to start. Write freely — we help refine how it lands.</div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" data-action="analyze" id="btnAnalyze">🔍 Review My Tone &amp; Learn</button>
+    </div>
+  </section>
+
+  <!-- STEP 2: LEARN & REFINE (LEARNING FIRST!) -->
+  <section class="step" data-step="2" hidden aria-labelledby="title-2">
+    <p class="progress">🔍 STEP 2 OF 3 · LEARN &amp; REFINE</p>
+    <h1 class="refine" id="title-2" tabindex="-1">Make it clearer.</h1>
+    <p class="intro">Learning first: click any highlighted phrase or score box to understand perception risks and how to fix them.</p>
+
+    <!-- Perception Score & 5 Rubric Dimension Meters (Clickable Score Cards!) -->
+    <div class="panel score-panel" aria-live="polite">
+      <div class="panel-header">
+        <h2>📊 RECIPIENT PERCEPTION SCORE <span class="sub-hint">(Click any box to inspect rubric)</span></h2>
+        <div id="overallScoreBadge" class="score-pill">TONE SCORE: --</div>
+      </div>
+      <div id="verdictBox" class="verdict-box"></div>
+      <div id="dimensionGrid" class="dim-scores-grid"></div>
+    </div>
+
+    <!-- Interactive Annotated Draft (Clickable Highlights) -->
+    <div class="panel interactive-panel">
+      <div class="panel-header">
+        <h2>💡 INTERACTIVE TONE BREAKDOWN (CLICK ANY HIGHLIGHT)</h2>
+        <span class="flag-counter-badge" id="flagCounter">0 ISSUES DETECTED</span>
+      </div>
+      <p class="hint-text">👉 Click any yellow highlighted phrase to see why the recipient reads it poorly and what principle fixes it.</p>
+      <div id="annotatedDraft" class="annotated-draft-box">
+        <!-- Injected with clickable <mark class="flag-highlight"> -->
+      </div>
+    </div>
+
+    <!-- Active Hands-On Refinement Editor -->
+    <div class="editor">
+      <label for="draft-2">
+        <span>✍️ REFINE YOUR DRAFT HERE</span>
+        <div class="editor-header-right">
+          <span id="charCount2" class="char-count">0 / 3000</span>
+          <button class="copy-btn-small" id="btnCopyDraft" type="button" title="Copy your current draft">📋 COPY DRAFT</button>
+        </div>
+      </label>
+      <textarea id="draft-2" placeholder="Start tweaking your words based on the coaching tips..."></textarea>
+      <div class="reminder">🎯 Apply the nudges above. Click &ldquo;Check Again&rdquo; to watch your tone score improve.</div>
+    </div>
+
+    <!-- Actions: Re-check is primary, Rewrite is secondary -->
+    <div class="actions">
+      <button data-go="1">← Back to writing</button>
+      <button class="primary" data-action="check">⚡ Check again (Update Score)</button>
+      <button class="secondary-btn" data-action="rewrite">✨ Reveal AI Rewrite (Optional) →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3: REWRITE (WITH EMAIL INTEGRATION) -->
+  <section class="step" data-step="3" hidden aria-labelledby="title-3">
+    <p class="progress">✨ STEP 3 OF 3 · REWRITE</p>
+    <h1 class="rewrite" id="title-3" tabindex="-1">A fresh way to say it.</h1>
+    <p class="intro">Here is an AI-coached rewrite based on proven communication principles. Study what changed or send directly.</p>
+
+    <div class="panel rewrite-panel">
+      <div class="panel-header">
+        <h2>YOUR POLISHED REWRITE</h2>
+        <div class="panel-header-actions">
+          <button class="copy-btn" id="btnCopyRewrite" type="button">📋 COPY REWRITE</button>
+          <button class="email-btn" id="btnOpenEmail" type="button" title="Open default mail client with draft pre-filled">✉️ OPEN IN EMAIL</button>
+          <button class="email-btn gmail-btn" id="btnOpenGmail" type="button" title="Open in Gmail Web compose">📧 GMAIL DRAFT</button>
+        </div>
+      </div>
+
+      <!-- Honesty Guard & Takeaway -->
+      <div id="honestyBanner" class="honesty-banner"></div>
+      <div id="takeawayBox" class="takeaway-box"></div>
+
+      <!-- Full Rewrite text -->
+      <p id="rewrite" class="rewrite-content"></p>
+
+      <!-- Key Substitutions / Changes List -->
+      <div id="changesContainer" class="changes-container"></div>
+    </div>
+
+    <div class="actions">
+      <button data-go="2">← Back to editing &amp; learning</button>
+      <button class="primary" data-action="reset">🔄 Write something new</button>
+    </div>
+  </section>
+</main>
+
+<!-- STREAMLINED NEOBRUTALIST SKELETON LOADING OVERLAY WITH AUTO-TYPING WITTY GREY TEXT -->
+<div class="loading-overlay" id="loadingOverlay" hidden aria-live="assertive">
+  <div class="skeleton-card">
+    <div class="skeleton-header">
+      <span class="skeleton-pill">🧠 COACHING IN PROGRESS</span>
+      <div class="skeleton-bar skeleton-title-bar shimmer"></div>
+    </div>
+    
+    <!-- Sleek Streamlined Skeleton Lines -->
+    <div class="skeleton-lines">
+      <div class="skeleton-bar skeleton-line-full shimmer"></div>
+      <div class="skeleton-bar skeleton-line-med shimmer"></div>
+      <div class="skeleton-bar skeleton-line-short shimmer"></div>
+    </div>
+
+    <!-- Auto-Typing Grey Text Container (Jokes, Witty Musings & Grammar Facts) -->
+    <div class="typewriter-box">
+      <span class="typewriter-tag">💬 MUSING:</span>
+      <span class="typewriter-text" id="typewriterText">Consulting the Oxford comma society…</span>
+      <span class="typewriter-cursor">|</span>
+    </div>
+  </div>
+</div>
+
+<!-- SPLASH SCREEN / ONBOARDING MODAL -->
+<div class="modal-backdrop splash-backdrop" id="splashScreen" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="splash-card">
+    <div class="splash-header">
+      <span class="splash-pill">💡 WELCOME TO UNSAID</span>
+      <button class="modal-close-btn" id="btnCloseSplash" type="button" aria-label="Close splash screen">✕</button>
+    </div>
+    <div class="splash-body">
+      <h2>Say the hard things — without regretting it later.</h2>
+      <p class="splash-lead">Most high-stakes messages fail not because of what you meant, but how the other person hears it. <strong>Unsaid</strong> coaches you on how your words actually land before you hit send.</p>
+      
+      <div class="splash-features">
+        <div class="feature-card">
+          <div class="feature-icon">👤</div>
+          <div>
+            <div class="feature-title">Universal to Anyone</div>
+            <div class="feature-desc">Write to anyone: managers, landlords, clients, romantic partners, colleagues, or professors.</div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <div>
+            <div class="feature-title">Learning First</div>
+            <div class="feature-desc">See your Tone Score (0–100) and click highlighted phrases to inspect communication principles.</div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <div>
+            <div class="feature-title">Honesty Guard</div>
+            <div class="feature-desc">Principled AI rewrites that never invent fake excuses, imaginary dates, or false claims.</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="primary splash-cta-btn" id="btnStartApp" type="button">🚀 Let's Start Drafting</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL / POPUP FOR CLICKED HIGHLIGHTED PHRASES -->
+<div class="modal-backdrop" id="flagModal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span class="modal-title">⚠️ TONE ISSUE INSIGHT</span>
+      <button class="modal-close-btn" id="btnCloseModal" type="button" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-phrase-block">
+        <span class="modal-label">FLAGGED PHRASE:</span>
+        <div class="modal-phrase-text" id="modalPhrase"></div>
+      </div>
+      <div class="modal-detail-row">
+        <span class="principle-pill" id="modalPrinciple">🎯 Own It</span>
+      </div>
+      <div class="modal-section">
+        <span class="modal-label">WHY IT READS POORLY TO THE RECIPIENT:</span>
+        <p class="modal-desc" id="modalReason"></p>
+      </div>
+      <div class="modal-section">
+        <span class="modal-label">💡 RECOMMENDED ACTION / NUDGE:</span>
+        <p class="modal-nudge" id="modalNudge"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="primary modal-action-btn" id="btnApplyModal" type="button">✍️ Try Fixing In Editor</button>
+      <button class="outline modal-action-btn" id="btnDismissModal" type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL / POPUP FOR CLICKED SCORE CARDS -->
+<div class="modal-backdrop" id="scoreModal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-header score-modal-header">
+      <span class="modal-title" id="scoreModalTitle">📊 DIMENSION INSIGHT</span>
+      <button class="modal-close-btn" id="btnCloseScoreModal" type="button" aria-label="Close score dialog">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="score-modal-overview">
+        <div class="score-large-number" id="scoreModalValue">3/5</div>
+        <div class="score-target-badge" id="scoreModalTarget">Target: 4-5/5</div>
+      </div>
+      <div class="modal-section">
+        <span class="modal-label">WHAT THIS DIMENSION EVALUATES:</span>
+        <p class="modal-desc" id="scoreModalDesc"></p>
+      </div>
+      <div class="modal-section" id="scoreModalLinkedFlagsBlock">
+        <span class="modal-label">LINKED PHRASES IN YOUR DRAFT:</span>
+        <div id="scoreModalLinkedFlags" class="score-linked-flags"></div>
+      </div>
+      <div class="modal-section">
+        <span class="modal-label">💡 HOW TO SCORE HIGHER:</span>
+        <p class="modal-nudge" id="scoreModalAdvice"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="outline modal-action-btn" id="btnDismissScoreModal" type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL / POPUP FOR ZERO RETENTION PRIVACY (AUTHENTIC CODE DETAILS) -->
+<div class="modal-backdrop" id="privacyModal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-header privacy-modal-header">
+      <span class="modal-title">🔒 ZERO-RETENTION PRIVACY ARCHITECTURE</span>
+      <button class="modal-close-btn" id="btnClosePrivacyModal" type="button" aria-label="Close privacy dialog">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="privacy-intro">Your words belong only to you. Here is exactly how our backend guarantees zero data retention:</p>
+      
+      <div class="privacy-points">
+        <div class="privacy-point-card">
+          <div class="privacy-point-badge">1. SHA-256 HASH ONLY</div>
+          <p>In <code>app/audit.py</code>, drafts are immediately converted to an irreversible cryptographic SHA-256 digest (<code>hash_text()</code>) for rate-limiting. Plaintext is discarded immediately.</p>
+        </div>
+        <div class="privacy-point-card">
+          <div class="privacy-point-badge">2. RAW DRAFTS NEVER LOGGED</div>
+          <p>As written in our audit pipeline: <em>"RAW DRAFT IS NEVER LOGGED OR RETAINED."</em> Server logs record latency, character counts, and hashes—never your messages.</p>
+        </div>
+        <div class="privacy-point-card">
+          <div class="privacy-point-badge">3. NO DATABASE &amp; NO ACCOUNTS</div>
+          <p>This repository has zero database tables (no SQLite, Postgres, or MongoDB). Every request is processed entirely in ephemeral RAM and disappears when finished.</p>
+        </div>
+        <div class="privacy-point-card">
+          <div class="privacy-point-badge">4. EPHEMERAL LLM CALLS</div>
+          <p>Calls to Google Gemini GenAI SDK run with ephemeral session configurations without training flags on user data.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="outline modal-action-btn" id="btnDismissPrivacyModal" type="button">I Trust It ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAN, SIMPLE FOOTER WITH ANTIGRAVITY & NANDHA CREDIT -->
+<footer>
+  <div class="footer-credit">Made with 🖤 by <strong>Antigravity</strong> and <strong>Nandha</strong></div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
